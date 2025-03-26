@@ -1,88 +1,85 @@
-# **Pulse Code Modulation (PCM)**
+## **DELTA MODULATION**
+## **AIM :**
+To Write a Python program to implement and visualize delta modulation and demodulation with low-pass filtering for signal reconstruction.
 
-## **Aim**
-To perform **Pulse Code Modulation (PCM)** for a given signal using Python.
+## **TOOLS REQUIRED:**
+Python IDE with Scipy and Numpy
 
-## **Tools Required**
-- **Python IDE**
-- **Libraries:**
-  - `Numpy` (for numerical computations)
-  - `Matplotlib` (for visualization)
-  - `Scipy` (for signal processing)
-
----
-
-## **Program**
-```python
-# PCM Implementation
-import matplotlib.pyplot as plt
+## **PROGRAM:**
+```
+## DELTA MODULATION 
 import numpy as np
+import matplotlib.pyplot as plt
+from scipy.signal import butter, filtfilt
 
 # Parameters
-sampling_rate = 5000  # Sampling rate (samples per second)
-frequency = 50  # Frequency of the message signal (analog signal)
-duration = 0.1  # Duration of the signal in seconds
-quantization_levels = 16  # Number of quantization levels (PCM resolution)
+fs = 10000  # Sampling frequency
+f = 10  # Signal frequency
+T = 1  # Duration in seconds
+delta = 0.1  # Step size
 
-# Generate time vector
-t = np.linspace(0, duration, int(sampling_rate * duration), endpoint=False)
+t = np.arange(0, T, 1/fs)
+message_signal = np.sin(2 * np.pi * f * t)  # Sine wave as input signal
 
-# Generate message signal (analog signal)
-message_signal = np.sin(2 * np.pi * frequency * t)
+# Delta Modulation Encoding
+encoded_signal = []
+dm_output = [0]  # Initial value of the modulated signal
+prev_sample = 0
 
-# Generate clock signal (sampling clock) with higher frequency than before
-clock_signal = np.sign(np.sin(2 * np.pi * 200 * t))  # Increased clock frequency to 200 Hz
+for sample in message_signal:
+    if sample > prev_sample:
+        encoded_signal.append(1)
+        dm_output.append(prev_sample + delta)
+    else:
+        encoded_signal.append(0)
+        dm_output.append(prev_sample - delta)
+    prev_sample = dm_output[-1]
 
-# Quantize the message signal
-quantization_step = (max(message_signal) - min(message_signal)) / quantization_levels
-quantized_signal = np.round(message_signal / quantization_step) * quantization_step
+# Delta Demodulation (Reconstruction)
+demodulated_signal = [0]
+for bit in encoded_signal:
+    if bit == 1:
+        demodulated_signal.append(demodulated_signal[-1] + delta)
+    else:
+        demodulated_signal.append(demodulated_signal[-1] - delta)
 
-# Simulate the PCM modulated signal (digital representation)
-pcm_signal = (quantized_signal - min(quantized_signal)) / quantization_step
-pcm_signal = pcm_signal.astype(int)
+# Convert to numpy array
+demodulated_signal = np.array(demodulated_signal)
 
-# Plotting the results
-plt.figure(figsize=(12, 10))
+# Apply a low-pass Butterworth filter
+def low_pass_filter(signal, cutoff_freq, fs, order=4):
+    nyquist = 0.5 * fs
+    normal_cutoff = cutoff_freq / nyquist
+    b, a = butter(order, normal_cutoff, btype='low', analog=False)
+    return filtfilt(b, a, signal)
 
-# Plot message signal
-plt.subplot(4, 1, 1)
-plt.plot(t, message_signal, label="Message Signal (Analog)", color='blue')
-plt.title("Message Signal (Analog)")
-plt.xlabel("Time [s]")
-plt.ylabel("Amplitude")
-plt.grid(True)
+filtered_signal = low_pass_filter(demodulated_signal, cutoff_freq=20, fs=fs)
 
-# Plot clock signal (higher frequency)
-plt.subplot(4, 1, 2)
-plt.plot(t, clock_signal, label="Clock Signal (Increased Frequency)", color='green')
-plt.title("Clock Signal (Increased Frequency)")
-plt.xlabel("Time [s]")
-plt.ylabel("Amplitude")
-plt.grid(True)
+# Plotting the Results
+plt.figure(figsize=(12, 6))
 
-# Plot PCM modulated signal (quantized)
-plt.subplot(4, 1, 3)
-plt.step(t, quantized_signal, label="PCM Modulated Signal", color='red')
-plt.title("PCM Modulated Signal (Quantized)")
-plt.xlabel("Time [s]")
-plt.ylabel("Amplitude")
-plt.grid(True)
+plt.subplot(3, 1, 1)
+plt.plot(t, message_signal, label='Original Signal', linewidth=1)
+plt.legend()
+plt.grid()
 
-# Plot 'PCM Demodulation'
-plt.subplot(4, 1, 4)
-plt.plot(t, quantized_signal, label="Signal Demodulation", color='purple', linestyle='--')
-plt.title("Signal Without Demodulation")
-plt.xlabel("Time [s]")
-plt.ylabel("Amplitude")
-plt.grid(True)
+plt.subplot(3, 1, 2)
+plt.step(t, dm_output[:-1], label='Delta Modulated Signal', where='mid')
+plt.legend()
+plt.grid()
+
+plt.subplot(3, 1, 3)
+plt.plot(t, filtered_signal[:-1], label='Demodulated & Filtered Signal', linestyle='dotted', linewidth=1, color='r')
+plt.legend()
+plt.grid()
 
 plt.tight_layout()
 plt.show()
 ```
+## **Output:**
+![exp 4](https://github.com/user-attachments/assets/7706634e-8d4f-4f5d-b3f2-e84d56e8b1c8)
 
-## **Output Waveform**
-![exp 4](https://github.com/user-attachments/assets/f63ef82d-2e40-4746-990b-a8f325192718)
 
+## **Result:**
 
-## **Results**
-Pulse Code Modulation for the given signal using python is verified.
+Thus, A Python Program is written to implement and visualize delta modulation and demodulation with low-pass filtering for signal reconstruction
